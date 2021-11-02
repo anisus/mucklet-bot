@@ -1,0 +1,37 @@
+{
+  "name": "mucklet-bot",
+  "version": "0.1.0",
+  "description": "A bot for Mucklet based games such as Wolfery.com.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build:docs": "jsdoc2md ./modules/**/*.js > ./docs/modules.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anisus/mucklet-bot.git"
+  },
+  "author": "Accipiter Nisus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anisus/mucklet-bot/issues"
+  },
+  "imports": {
+    "#utils/*": "./utils/*"
+  },
+  "homepage": "https://github.com/anisus/mucklet-bot#readme",
+  "dependencies": {
+    "glob": "^7.2.0",
+    "isomorphic-ws": "^4.0.1",
+    "lorem-ipsum": "^2.0.4",
+    "modapp": "^2.5.0",
+    "modapp-l10n": "^1.7.0",
+    "modapp-resource": "^1.7.0",
+    "resclient": "^2.3.1-alpha.0",
+    "seedrandom": "^3.0.5",
+    "ws": "^8.2.3"
+  },
+  "devDependencies": {
+    "jsdoc-to-markdown": "^7.1.0"
+  }
+}
