@@ -60,7 +60,14 @@ export default function parseArgs(args, prefix) {
 			if (!part) continue;
 
 			if (j == parts.length - 1) {
-				o[part] = value;
+				if (o.hasOwnProperty(part)) {
+					if (!Array.isArray(o[part])) {
+						o[part] = [o[part]];
+					}
+					o[part].push(value);
+				} else {
+					o[part] = value;
+				}
 			} else {
 				if (typeof o[part] !== 'object') o[part] = {};
 				o = o[part];
