@@ -4,24 +4,24 @@ import generateText from '#utils/generateText.js';
 import { populationProbability } from '#utils/probability.js';
 
 /**
- * ActionWhisper parameters.
- * @typedef {Object} ActionWhisper~Params
+ * ActionAddress parameters.
+ * @typedef {Object} ActionAddress~Params
  * @property {object} [populationProbability] Probabilities of the action to occur based on room population.
  * @property {number} [delay] Additional delay in milliseconds to wait prior to executing the action.
  * @property {number} [postdelay] Delay in milliseconds to wait after executing the action.
  * @property {?Array.<string>} [phrases] An array of phrases to use as message. Null means random lorem ipsum.
- * @property {?Array.<string>} [chars] An array of chars eligible to be whispered to. Null means any.
+ * @property {?Array.<string>} [chars] An array of chars eligible to be addressed to. Null means any.
  */
 
 /**
- * ActionWhisper adds the action to speak in a room with other characters.
+ * ActionAddress adds the action to speak in a room with other characters.
  */
-class ActionWhisper {
+class ActionAddress {
 
 	/**
-	 * Creates a new ActionWhisper instance.
+	 * Creates a new ActionAddress instance.
 	 * @param {App} app Modapp App object.
-	 * @param {ActionWhisper~Params} params Module parameters.
+	 * @param {ActionAddress~Params} params Module parameters.
 	 */
 	constructor(app, params) {
 		this.app = app;
@@ -42,22 +42,22 @@ class ActionWhisper {
 		this.module = Object.assign({ self: this }, module);
 
 		this.module.botController.addAction({
-			id: 'whisper',
+			id: 'address',
 			outcomes: this._outcomes,
 			exec: this._exec,
 		});
 	}
 
 	/**
-	 * Enqueues a whisper action to the botController.
+	 * Enqueues a address action to the botController.
 	 * @param {string} charId Character ID.
 	 * @param {string} targetId  Target character ID.
-	 * @param {string} msg Message to whisper.
+	 * @param {string} msg Message to address.
 	 * @param {boolean} pose Flag if message is posed.
 	 * @param {number} priority Priority of the action.
 	 */
 	enqueue(charId, targetId, msg, pose, priority) {
-		this.module.botController.enqueue('whisper', {
+		this.module.botController.enqueue('address', {
 			charId: charId,
 			targetId: targetId,
 			msg,
@@ -121,14 +121,14 @@ class ActionWhisper {
 			return Promise.reject(`target char no longer in room ${char.inRoom.name}`);
 		}
 
-		return char.call('whisper', { msg: outcome.msg, charId: target.id, pose: outcome.pose })
-			.then(() => `${char.name} ${char.surname} whispered to ${target.name} ${target.surname}`);
+		return char.call('address', { msg: outcome.msg, charId: target.id, pose: outcome.pose })
+			.then(() => `${char.name} ${char.surname} addressed ${target.name} ${target.surname}`);
 	}
 
 	dispose() {
-		this.module.botController.removeAction('whisper');
+		this.module.botController.removeAction('address');
 	}
 
 }
 
-export default ActionWhisper;
+export default ActionAddress;
