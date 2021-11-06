@@ -29,10 +29,10 @@ class ReactionArriveWelcome {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			populationChance: { type: 'object', default: { 1: 0, 2: 1, }},
+			populationChance: { type: '?object' },
 			priority: { type: 'number', default: 150 },
-			delay: { type: 'number', default: 5000 },
-			postdelay: { type: 'number', default: 1000 },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 			wordLengthMin: { type: 'number', default: 1 },
 			wordLengthMax: { type: 'number', default: 12 },
 			phrases: { type: '?array' },
@@ -48,6 +48,8 @@ class ReactionArriveWelcome {
 	}
 
 	_onCharEvent = (char, ev) => {
+		if (!this.populationChance) return
+
 		// Assert it is a travel event
 		if (ev.type != 'arrive') {
 			return;

@@ -25,9 +25,9 @@ class ActionWakeup {
 		// Params
 		setParams(this, params, {
 			charLimit: { type: 'number', default: 1 },
-			probability: { type: 'number', default: 1 },
-			delay: { type: 'number', default: 1000 },
-			postdelay: { type: 'number', default: 2000 },
+			probability: { type: 'number' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 		});
 
 		this.app.require([ 'botController', 'player' ], this._init);
@@ -56,6 +56,8 @@ class ActionWakeup {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.probability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id));
 		// Cannot wakeup/control chars if the char limit is already reached.

@@ -23,9 +23,9 @@ class ActionSleep {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			probability: { type: 'number', default: 1 },
-			delay: { type: 'number', default: 1000 },
-			postdelay: { type: 'number', default: 2000 },
+			probability: { type: 'number' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 		});
 
 		this.app.require([ 'botController' ], this._init);
@@ -42,6 +42,8 @@ class ActionSleep {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.probability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id));
 		// Assert we have any controlled characters to put to sleep.

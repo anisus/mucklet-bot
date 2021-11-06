@@ -24,16 +24,9 @@ class ActionTeleport {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			populationProbability: { type: 'object', default: { // 0: 1 }},
-				1: 100,
-				2: 20,
-				3: 5,
-				10: 1,
-				20: 5,
-				80: 100
-			}},
-			delay: { type: 'number', default: 1000 },
-			postdelay: { type: 'number', default: 2000 },
+			populationProbability: { type: '?object' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 		});
 
 		this.app.require([ 'botController', 'api', 'login' ], this._init);
@@ -62,6 +55,8 @@ class ActionTeleport {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.populationProbability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id)
 				&& (

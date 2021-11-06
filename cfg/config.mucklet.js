@@ -36,9 +36,7 @@ const config = {
 		delayMax: 5 * 60 * 1000, // Idle at most 5 minutes
 		spread: 'cube'           // Few high values
 	},
-	actionLurk: {
-		active: false, // Disable lurking
-	},
+	actionLurk: {}, // Defaults to 0 probability
 	actionPose: {
 		populationProbability: {
 			1: 0,  // No probability to speak when alone in a room
@@ -63,9 +61,7 @@ const config = {
 		wordLengthMax: 100,  // Say at most 100 words
 		// phrases: null     // Use lorem ipsum
 	},
-	actionSleep: {
-		active: false, // Disable sleeping
-	},
+	actionSleep: {}, // Defaults to 0 probability
 	actionTeleport: {
 		populationProbability: {
 			1: 20,  // Probability 20 with 0 - 1 characters in the room

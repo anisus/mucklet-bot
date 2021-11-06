@@ -23,7 +23,7 @@ class ReactionRead {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			chance: { type: 'number', default: 1 },
+			chance: { type: 'number' },
 			eventTypes: { type: 'array', default: [ 'say', 'pose', 'ooc', 'describe' ]},
 			priority: { type: 'number', default: 100 },
 		});
@@ -42,6 +42,8 @@ class ReactionRead {
 	}
 
 	_onCharEvent = (char, ev) => {
+		if (!this.chance) return
+
 		// Assert it is one of the event types affected by read
 		if (this.eventTypes.indexOf(ev.type) == -1) {
 			return;

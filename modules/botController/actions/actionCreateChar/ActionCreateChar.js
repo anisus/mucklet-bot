@@ -25,9 +25,9 @@ class ActionCreateChar {
 		// Params
 		setParams(this, params, {
 			charLimit: { type: 'number', default: 1 },
-			probability: { type: 'number', default: 1 },
-			delay: { type: 'number', default: 5000 },
-			postdelay: { type: 'number', default: 2000 },
+			probability: { type: 'number' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 		});
 
 		this.app.require([ 'botController' ], this._init);
@@ -44,6 +44,8 @@ class ActionCreateChar {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.probability) return;
+
 		// Cannot create chars if the char limit is already reached.
 		if (player.chars.length >= this.charLimit) return;
 

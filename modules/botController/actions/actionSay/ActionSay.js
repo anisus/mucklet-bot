@@ -28,14 +28,9 @@ class ActionSay {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			populationProbability: { type: 'object', default: { // 0: 1 }},
-				0: 0,
-				1: 20,
-				2: 20,
-				3: 40,
-			}},
-			delay: { type: 'number', default: 1000 },
-			postdelay: { type: 'number', default: 2000 },
+			populationProbability: { type: '?object' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 			wordLengthMin: { type: 'number', default: 2 },
 			wordLengthMax: { type: 'number', default: 100 },
 			phrases: { type: '?array' },
@@ -71,6 +66,8 @@ class ActionSay {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.populationProbability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id)
 				&& !m.inRoom.isQuiet

@@ -23,7 +23,7 @@ class ActionIdle {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			probability: { type: 'number', default: 1 },
+			probability: { type: 'number' },
 			delayMin: { type: 'number', default: 1000 },
 			delayMax: { type: 'number', default: 5000 },
 			spread: { type: 'string', default: 'linear' },
@@ -43,6 +43,8 @@ class ActionIdle {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.probability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id));
 		// Idling can only be done with characters awake, else it is lurking

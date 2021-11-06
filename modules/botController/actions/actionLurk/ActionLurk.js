@@ -23,7 +23,7 @@ class ActionLurk {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			probability: { type: 'number', default: 1 },
+			probability: { type: 'number' },
 			delayMin: { type: 'number', default: 2000 },
 			delayMax: { type: 'number', default: 5000 }
 		});
@@ -42,6 +42,8 @@ class ActionLurk {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.probability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id));
 		// Lurking can only be done with no characters awake, else it is idling

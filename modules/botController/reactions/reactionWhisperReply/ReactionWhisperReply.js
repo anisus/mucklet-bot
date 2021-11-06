@@ -25,7 +25,7 @@ class ReactionPrivateReply {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			chance: { type: 'number', default: 1 },
+			chance: { type: 'number' },
 			priority: { type: 'number', default: 100 },
 			wordLengthMin: { type: 'number', default: 2 },
 			wordLengthMax: { type: 'number', default: 100 },
@@ -42,6 +42,8 @@ class ReactionPrivateReply {
 	}
 
 	_onCharEvent = (char, ev) => {
+		if (!this.chance) return
+
 		// Assert it is one of the event types affected by read
 		if (ev.type != 'whisper') {
 			return;
@@ -58,8 +60,12 @@ class ReactionPrivateReply {
 		let msg = this.phrases
 			? this.phrases[Math.floor(Math.random() * this.phrases.length)]
 			: generateText(this.wordLengthMin, this.wordLengthMax);
+		let pose = msg[0] == ':';
+		if (pose) {
+			msg = msg.slice(1);
+		}
 
-		this.module.actionWhisper.enqueue(char.id, ev.char.id, msg, false, this.priority);
+		this.module.actionWhisper.enqueue(char.id, ev.char.id, msg, pose, this.priority);
 	}
 
 	dispose() {

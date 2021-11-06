@@ -27,9 +27,9 @@ class ActionWhisper {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			populationProbability: { type: 'object', default: { 0: 1 }},
-			delay: { type: 'number', default: 1000 },
-			postdelay: { type: 'number', default: 1000 },
+			populationProbability: { type: '?object' },
+			delay: { type: 'number' },
+			postdelay: { type: 'number' },
 			wordLengthMin: { type: 'number', default: 2 },
 			wordLengthMax: { type: 'number', default: 100 },
 			phrases: { type: '?array' },
@@ -69,6 +69,8 @@ class ActionWhisper {
 	}
 
 	_outcomes = (player, state) => {
+		if (!this.populationProbability) return;
+
 		let chars = player.controlled.toArray()
 			.filter(m => this.module.botController.validChar(m.id)
 				&& !m.inRoom.isQuiet
