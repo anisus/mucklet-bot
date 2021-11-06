@@ -80,7 +80,7 @@ class CharPing {
 	_ping(char, since) {
 		since = since || 0;
 		this.timers[char.id] = true;
-		console.debug("charPing: Pinging char " + char.id);
+		// console.debug("charPing: Pinging char " + char.id);
 		char.call('ping').then(() => {
 			if (!this.timers[char.id]) return;
 			// On successful ping

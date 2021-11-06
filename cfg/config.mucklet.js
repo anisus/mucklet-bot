@@ -5,7 +5,7 @@ const config = {
 		origin: "https://mucklet.com",
 	},
 	login: {
-		user: 'botmaster2000',
+		user: 'botmaster',
 		pass: 'ZSx9xofZjJiJME7S5AjHS2EehqQMqlHEtD8d1ZE8XNA=', // "mysecret"
 	},
 	personality: {
@@ -95,8 +95,8 @@ const config = {
 	},
 	reactionArriveWelcome: {
 		populationChance: {
-			1: 0.8,   // 80% chance with 1 character
-			80: 0.05, // 5% chance with 80 characters
+			1: 0.5,   // 80% chance with 1 character
+			80: 0.0125, // 5% chance with 80 characters
 		},
 		priority: 150,
 		delay: 5 * 1000,     // 5 seconds additional delay before welcoming
@@ -110,8 +110,8 @@ const config = {
 	},
 	reactionTravelGreet: {
 		populationChance: {
-			1: 0.8,   // 80% chance with 1 character
-			80: 0.05, // 5% chance with 80 characters
+			1: 0.5,   // 80% chance with 1 character
+			80: 0.0125, // 5% chance with 80 characters
 		},
 		priority: 150,
 		delay: 1 * 1000,     // 1 seconds additional delay before welcoming

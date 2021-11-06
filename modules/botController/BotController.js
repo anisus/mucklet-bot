@@ -166,7 +166,7 @@ class BotController {
 		let rand = Math.random() * totalProbability;
 		let summedProbability = 0;
 		let o = null;
-		console.debug("Possible outcomes: ", outcomes.map(o => o.actionId + "(" + o.outcome.probability + ")").join(", "));
+		// console.debug("Possible outcomes: ", outcomes.map(o => o.actionId + "(" + o.outcome.probability + ")").join(", "));
 		for (let i = 0; i < outcomes.length; i++) {
 			let ov = outcomes[i];
 			if (ov.outcome && ov.outcome.probability) {
@@ -240,10 +240,10 @@ class BotController {
 		// Decrease timers with currently spend time.
 		if (o.state == STATE_PENDING) {
 			o.delay -= Math.min(diff, o.delay);
-			console.debug(o.actionId + ": pausing delay with " + Math.floor(o.delay / 1000) + " seconds left");
+			// console.debug(o.actionId + ": pausing delay with " + Math.floor(o.delay / 1000) + " seconds left");
 		} else {
 			o.postdelay -= Math.min(diff, o.postdelay);
-			console.debug(o.actionId + ": pausing postdelay with " + Math.floor(o.postdelay / 1000) + " seconds left");
+			// console.debug(o.actionId + ": pausing postdelay with " + Math.floor(o.postdelay / 1000) + " seconds left");
 		}
 	}
 
@@ -254,9 +254,9 @@ class BotController {
 		let delay = (o.state == STATE_PENDING ?  o.delay : o.postdelay) || 0;
 		if (delay) {
 			if (o.state == STATE_PENDING) {
-				console.debug(o.actionId + ": delay for " + Math.floor(delay / 1000) + " seconds");
+				// console.debug(o.actionId + ": delay for " + Math.floor(delay / 1000) + " seconds");
 			} else {
-				console.debug(o.actionId + ": postdelay for " + Math.floor(delay / 1000) + " seconds");
+				// console.debug(o.actionId + ": postdelay for " + Math.floor(delay / 1000) + " seconds");
 			}
 			this.timerStarted = new Date();
 			this.timer = setTimeout(() => this._onTimeout(o), delay);
@@ -284,7 +284,7 @@ class BotController {
 				return Promise.resolve(action.exec ? action.exec(this.model.player, this.model.state, o.outcome) : null)
 					.then(result => {
 						if (result) {
-							console.debug(o.actionId + ":", toString(result))
+							// console.debug(o.actionId + ":", toString(result))
 						}
 						o.state = STATE_DONE;
 						this._startTimer(o);
