@@ -88,7 +88,7 @@ for (let i = 0; i < instances; i++) {
 		let login = result.modules.login;
 		let user = await login.getUserPromise();
 
-		console.log("Logged in with #" + (i + 1) + ": " +  user.name);
+		console.log("Logged in with #" + (i + 1) + ": " +  (user.name || user.identity.name));
 		users.push(user);
 
 		// Exit once we are no longer logged in

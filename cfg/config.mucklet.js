@@ -6,7 +6,8 @@ const config = {
 	},
 	login: {
 		user: 'botmaster',
-		pass: 'ZSx9xofZjJiJME7S5AjHS2EehqQMqlHEtD8d1ZE8XNA=', // "mysecret"
+		pass: 'ZSx9xofZjJiJME7S5AjHS2EehqQMqlHEtD8d1ZE8XNA=', // sha256("mysecret")
+		hash: 'eEhjOWz2QXqUdqcd6RBqt1MJXJ6v9yFGO8lL9jV6/dM=', // hmacsha256("mysecret", "TheStoryStartsHere")
 	},
 	personality: {
 		typeSpeed: 300,  // 300 characters per minute

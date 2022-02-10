@@ -5,7 +5,8 @@ import setParams from '#utils/setParams.js';
  * Login parameters.
  * @typedef {Object} Login~Params
  * @property {string} [user] User account name.
- * @property {string} [pass] Password, sha256 hashed and base64 encoded, padded with equal (=). Eg. "ZSx9xofZjJiJME7S5AjHS2EehqQMqlHEtD8d1ZE8XNA="
+ * @property {string} [pass] Password, sha256 hashed and base64 encoded, padded with equal (=). Eg. "mysecret" becomes "ZSx9xofZjJiJME7S5AjHS2EehqQMqlHEtD8d1ZE8XNA="
+ * @property {string} [hash] Password, hmacsha256 hashed using the public pepper key "TheStoryStartsHere". Then base64 encoded, padded with equal (=). Eg. "mysecret" becomes "eEhjOWz2QXqUdqcd6RBqt1MJXJ6v9yFGO8lL9jV6/dM="
  */
 
 /**
@@ -24,6 +25,7 @@ class Login {
 		setParams(this, params, {
 			user: { type: 'string' },
 			pass: { type: 'string' },
+			hash: { type: 'string' },
 		});
 
 		this.app.require([ 'api' ], this._init);
@@ -63,7 +65,7 @@ class Login {
 							user.on('unsubscribe', this._onUnsubscribe);
 							return user;
 						})
-				} else if (this.model.loginError && this.model.loginError.code == 'auth.unknownUser') {
+				} else if (this.model.loginError && this.model.loginError.code == 'identity.unknownUser') {
 					console.log("Unknown user. Trying to register " + this.user);
 					return this._tryRegisterUser();
 				}
@@ -78,9 +80,10 @@ class Login {
 	}
 
 	_tryRegisterUser() {
-		return this.module.api.call('auth', 'register', {
+		return this.module.api.authenticate('auth', 'register', {
 			name: this.user,
-			pass: this.pass
+			pass: this.pass,
+			hash: this.hash
 		})
 			.then(() => this._authenticate())
 			.then(() => this._tryGetUser());
@@ -89,7 +92,8 @@ class Login {
 	_authenticate = () => {
 		return this.module.api.authenticate('auth', 'login', {
 			name: this.user,
-			pass: this.pass
+			pass: this.pass,
+			hash: this.hash
 		}).then(() => {
 			this.model.set({ loggedIn: true, loginError: null });
 		}).catch(err => {

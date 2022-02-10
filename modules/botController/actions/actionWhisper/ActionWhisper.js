@@ -81,7 +81,7 @@ class ActionWhisper {
 
 		let outcomes = [];
 		chars.forEach(c => {
-			if (c.inRoom) {
+			if (c.inRoom && c.inRoom.chars) {
 				c.inRoom.chars.toArray()
 					.filter(rc => rc.state == 'awake' && !findById(player.controlled, rc.id))
 					.forEach(rc => {
