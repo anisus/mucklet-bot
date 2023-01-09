@@ -1,8 +1,8 @@
 const config = {
 	api: {
-		hostUrl: "wss://test.mucklet.com",
-		webResourcePath: "https://test.mucklet.com/api/",
-		origin: "https://mucklet.com",
+		hostUrl: "wss://api.test.mucklet.com",
+		webResourcePath: "https://api.test.mucklet.com/api/",
+		origin: "https://test.mucklet.com",
 	},
 	login: {
 		user: 'botmaster',

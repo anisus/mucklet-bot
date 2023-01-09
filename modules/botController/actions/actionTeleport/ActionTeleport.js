@@ -27,6 +27,7 @@ class ActionTeleport {
 			populationProbability: { type: '?object' },
 			delay: { type: 'number' },
 			postdelay: { type: 'number' },
+			allowedDestinations: { type: '?array' },
 		});
 
 		this.app.require([ 'botController', 'api', 'login' ], this._init);
@@ -84,7 +85,7 @@ class ActionTeleport {
 		}
 		// Combine global and character specific teleport nodes.
 		// Exclude nodes leading to the current room.
-		let nodes = this.globalTeleports.toArray().concat(char.nodes.toArray()).filter(n => n.room.id != char.inRoom.id);
+		let nodes = this.globalTeleports.toArray().concat(char.nodes.toArray()).filter(n => n.room.id != char.inRoom.id && (!this.allowedDestinations || this.allowedDestinations.indexOf(n.key) >= 0));
 		if (!nodes.length) {
 			return Promise.reject(`char ${char.name} ${char.surname} has no valid teleport nodes`);
 		}
