@@ -23,9 +23,7 @@ class Login {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			user: { type: 'string' },
-			pass: { type: 'string' },
-			hash: { type: 'string' },
+			token: { type: 'string' },
 		});
 
 		this.app.require([ 'api' ], this._init);
@@ -40,8 +38,15 @@ class Login {
 		this.module.api.setOnConnect(this._authenticate);
 	}
 
+	/**
+	 * Connects to the API and returns a promise that resolves with the logged
+	 * in user.
+	 * @returns {Promise.<Model>} Promise of the user model.
+	 */
 	login() {
-		return this._tryGetUser();
+		let promise = this.getUserPromise();
+		this._tryGetUser();
+		return promise;
 	}
 
 	/**
@@ -49,60 +54,63 @@ class Login {
 	 * @returns {Promise.<Model>} Promise of the user model.
 	 */
 	getUserPromise() {
-		return this.userPromise = this.userPromise || this._tryGetUser();
+		return this.userPromise = this.userPromise || (
+			this.model.user
+				? Promise.resolve(this.model.user)
+				: new Promise((resolve, reject) => {
+					this.userPromiseCallbacks = { resolve, reject };
+				})
+		);
 	}
 
 	_tryGetUser() {
 		return this.module.api.connect()
 			.then(() => {
 				if (this.model.loggedIn) {
-					return this.module.api.call('auth', 'getUser')
-						.then(user => {
-							this.model.set({ user });
-
-							// If the user model is forcefully unsubscribed,
-							// we have been kicked out (banned).
-							user.on('unsubscribe', this._onUnsubscribe);
-							return user;
-						})
-				} else if (this.model.loginError && this.model.loginError.code == 'identity.unknownUser') {
-					console.log("Unknown user. Trying to register " + this.user);
-					return this._tryRegisterUser();
+					return this.model.user
+						? Promise.resolve(this.model.user)
+						: this.module.api.call('auth', 'getUser')
+							.then(user => {
+								this.model.set({ user });
+								// If the user model is forcefully unsubscribed,
+								// we have been kicked out (banned).
+								user.on('unsubscribe', this._onUnsubscribe);
+								return user;
+							});
 				}
-
 				return Promise.reject(this.model.loginError || "Failed to login");
 			})
-			.catch(err => {
-				this.userPromise = null;
-				throw err;
-			});
-
-	}
-
-	_tryRegisterUser() {
-		return this.module.api.authenticate('auth', 'register', {
-			name: this.user,
-			pass: this.pass,
-			hash: this.hash
-		})
-			.then(() => this._authenticate())
-			.then(() => this._tryGetUser());
+			.then(user => this._resolve(user))
+			.catch(err => this._reject(err));
 	}
 
 	_authenticate = () => {
-		return this.module.api.authenticate('auth', 'login', {
-			name: this.user,
-			pass: this.pass,
-			hash: this.hash
+		return this.module.api.authenticate('auth', 'authenticateBot', {
+			token: this.token,
 		}).then(() => {
 			this.model.set({ loggedIn: true, loginError: null });
 		}).catch(err => {
 			// If we had a user, this is a failed reconnect
 			if (this.model.user) {
-				this.userPromise = null;
+				this._reject(err);
 			}
 			this.model.set({ loggedIn : false, user: null, loginError: err });
 		});
+	}
+
+	_resolve(user) {
+		if (this.userPromiseCallbacks) {
+			this.userPromiseCallbacks.resolve(user);
+			this.userPromiseCallbacks = null;
+		}
+	}
+
+	_reject(err) {
+		if (this.userPromiseCallbacks) {
+			this.userPromiseCallbacks.reject(err);
+			this.userPromiseCallbacks = null;
+		}
+		this.userPromise = null;
 	}
 
 	_onUnsubscribe = () => {

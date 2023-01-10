@@ -1,8 +1,8 @@
 const config = {
 	api: {
-		hostUrl: "wss://api.test.mucklet.com",
-		webResourcePath: "https://api.test.mucklet.com/api/",
-		origin: "https://test.mucklet.com",
+		hostUrl: "ws://localhost:8080",
+		webResourcePath: "http://localhost:8080/api/",
+		origin: "http://localhost:8080",
 	},
 	login: {
 		token: '', // Bot token created under Character Settings
