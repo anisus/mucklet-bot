@@ -50,15 +50,13 @@ class ActionWhisper {
 
 	/**
 	 * Enqueues a whisper action to the botController.
-	 * @param {string} charId Character ID.
 	 * @param {string} targetId  Target character ID.
 	 * @param {string} msg Message to whisper.
 	 * @param {boolean} pose Flag if message is posed.
 	 * @param {number} priority Priority of the action.
 	 */
-	enqueue(charId, targetId, msg, pose, priority) {
+	enqueue(targetId, msg, pose, priority) {
 		this.module.botController.enqueue('whisper', {
-			charId: charId,
 			targetId: targetId,
 			msg,
 			pose,
@@ -68,42 +66,35 @@ class ActionWhisper {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.populationProbability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id)
-				&& !m.inRoom.isQuiet
-			);
+		let ctrl = bot.controlled;
 
-		// Assert we have any controlled characters in non-quiet rooms.
-		if (!chars.length) return;
+		// Assert we have a controlled character in a non-quiet room.
+		if (!ctrl || !ctrl.inRoom || !ctrl.inRoom.chars || ctrl.inRoom.isQuiet) return;
 
 		let outcomes = [];
-		chars.forEach(c => {
-			if (c.inRoom && c.inRoom.chars) {
-				c.inRoom.chars.toArray()
-					.filter(rc => rc.state == 'awake' && !findById(player.controlled, rc.id))
-					.forEach(rc => {
-						let msg = this.phrases
-							? this.phrases[Math.floor(Math.random() * this.phrases.length)]
-							: generateText(this.wordLengthMin, this.wordLengthMax);
-						let pose = msg[0] == ':';
-						if (pose) {
-							msg = msg.slice(1);
-						}
-						outcomes.push({
-							charId: c.id,
-							targetId: rc.id,
-							msg,
-							pose,
-							probability: populationProbability(c.inRoom, this.populationProbability),
-							delay: this.delay + this.module.personality.calculateTypeDuration(msg),
-							postdelay: this.postdelay,
-						});
-					})
-			}
-		});
+		ctrl.inRoom.chars.toArray()
+			.filter(rc => rc.state == 'awake' && ctrl.id != rc.id)
+			.forEach(rc => {
+				let msg = this.phrases
+					? this.phrases[Math.floor(Math.random() * this.phrases.length)]
+					: generateText(this.wordLengthMin, this.wordLengthMax);
+				let pose = msg[0] == ':';
+				if (pose) {
+					msg = msg.slice(1);
+				}
+				outcomes.push({
+					charId: ctrl.id,
+					targetId: rc.id,
+					msg,
+					pose,
+					probability: populationProbability(ctrl.inRoom, this.populationProbability),
+					delay: this.delay + this.module.personality.calculateTypeDuration(msg),
+					postdelay: this.postdelay,
+				});
+			});
 
 		outcomes = outcomes.filter(o => o.probability);
 		// Split probability into character count
@@ -111,18 +102,18 @@ class ActionWhisper {
 		return outcomes;
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (!char) {
-			return Promise.reject(`${outcome.charId} not controlled`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (!ctrl) {
+			return Promise.reject(`char not controlled`);
 		}
-		let target = findById(char.inRoom && char.inRoom.chars, outcome.targetId);
+		let target = findById(ctrl.inRoom && ctrl.inRoom.chars, outcome.targetId);
 		if (!target) {
-			return Promise.reject(`target char no longer in room ${char.inRoom.name}`);
+			return Promise.reject(`target char no longer in room ${ctrl.inRoom.name}`);
 		}
 
-		return char.call('whisper', { msg: outcome.msg, charId: target.id, pose: outcome.pose })
-			.then(() => `${char.name} ${char.surname} whispered to ${target.name} ${target.surname}`);
+		return ctrl.call('whisper', { msg: outcome.msg, charId: target.id, pose: outcome.pose })
+			.then(() => `${ctrl.name} ${ctrl.surname} whispered to ${target.name} ${target.surname}`);
 	}
 
 	dispose() {

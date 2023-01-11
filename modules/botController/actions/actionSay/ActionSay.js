@@ -51,13 +51,11 @@ class ActionSay {
 
 	/**
 	 * Enqueues a say action to the botController.
-	 * @param {string} charId Character ID.
 	 * @param {string} msg Message to say.
 	 * @param {number} priority Priority of the action.
 	 */
-	enqueue(charId, msg, priority) {
+	enqueue(msg, priority) {
 		this.module.botController.enqueue('say', {
-			charId: charId,
 			msg,
 			delay: this.delay + this.module.personality.calculateTypeDuration(msg),
 			postdelay: this.postdelay,
@@ -65,44 +63,34 @@ class ActionSay {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.populationProbability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id)
-				&& !m.inRoom.isQuiet
-			);
+		let ctrl = bot.controlled;
 
-		// Assert we have any controlled characters in non-quiet rooms.
-		if (!chars.length) return;
+		// Assert we have a controlled character in a non-quiet room.
+		if (!ctrl || !ctrl.inRoom || ctrl.inRoom.isQuiet) return;
 
-		let outcomes = chars
-			.map(c => {
-				let msg = this.phrases
-					? this.phrases[Math.floor(Math.random() * this.phrases.length)]
-					: generateText(this.wordLengthMin, this.wordLengthMax);
-				return {
-					charId: c.id,
-					msg,
-					probability: populationProbability(c.inRoom, this.populationProbability),
-					delay: this.delay + this.module.personality.calculateTypeDuration(msg),
-					postdelay: this.postdelay,
-				};
-			})
-			.filter(o => o.probability);
-		// Split probability into character count
-		outcomes.forEach(o => o.probability = o.probability / outcomes.length);
-		return outcomes;
+		let msg = this.phrases
+			? this.phrases[Math.floor(Math.random() * this.phrases.length)]
+			: generateText(this.wordLengthMin, this.wordLengthMax);
+
+		return {
+			msg,
+			probability: populationProbability(ctrl.inRoom, this.populationProbability),
+			delay: this.delay + this.module.personality.calculateTypeDuration(msg),
+			postdelay: this.postdelay,
+		};
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (!char) {
-			return Promise.reject(`${outcome.charId} not controlled`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (!ctrl) {
+			return Promise.reject(`char not controlled`);
 		}
 
-		return char.call('say', { msg: outcome.msg })
-			.then(() => `${char.name} ${char.surname} spoke`);
+		return ctrl.call('say', { msg: outcome.msg })
+			.then(() => `${ctrl.name} ${ctrl.surname} spoke`);
 	}
 
 	dispose() {

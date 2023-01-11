@@ -1,10 +1,8 @@
 import setParams from '#utils/setParams.js';
-import findById from '#utils/findById.js';
 
 /**
  * ActionWakeup parameters.
  * @typedef {Object} ActionWakeup~Params
- * @property {number} [charLimit] Limit on how many characters to have awake at any single time.
  * @property {number} [probability] Probability of the action to occur.
  * @property {number} [delay] Delay in milliseconds to wait prior to executing the action.
  * @property {number} [postdelay] Delay in milliseconds to wait after executing the action.
@@ -24,13 +22,12 @@ class ActionWakeup {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			charLimit: { type: 'number', default: 1 },
 			probability: { type: 'number' },
 			delay: { type: 'number' },
 			postdelay: { type: 'number' },
 		});
 
-		this.app.require([ 'botController', 'player' ], this._init);
+		this.app.require([ 'botController', 'bot' ], this._init);
 	}
 
 	_init = (module) => {
@@ -42,57 +39,44 @@ class ActionWakeup {
 			exec: this._exec,
 		});
 
-		// Ensure controlled characters are also awake
-		this.module.player.getPlayerPromise().then(player => {
-			player.controlled.toArray()
-				.filter(m => this.module.botController.validChar(m.id) && m.state == 'asleep')
-				.forEach(c => {
-					this.module.botController.enqueue('wakeup', {
-						charId: c.id,
-						priority: 10000
-					});
+		// Ensure controlled character is also awake
+		this.module.bot.getBotPromise().then(bot => {
+			if (bot.controlled && bot.controlled.state == 'asleep') {
+				this.module.botController.enqueue('wakeup', {
+					priority: 10000
 				});
+			}
 		})
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.probability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id));
+		let ctrl = bot.controlled;
+
 		// Cannot wakeup/control chars if the char limit is already reached.
-		if (chars.length >= this.charLimit) return;
+		if (ctrl && ctrl.state == 'awake') return;
 
-		let outcomes = [];
-		for (let c of player.chars) {
-			if (c.state == 'asleep') {
-				if (this.module.botController.validChar(c.id)) {
-					outcomes.push({
-						charId: c.id,
-						delay: this.delayMin + Math.floor(Math.random() * (this.delayMax - this.delayMin)),
-						postdelay: this.postdelayMin + Math.floor(Math.random() * (this.postdelayMax - this.postdelayMin)),
-					});
-				}
-			}
-		}
-
-		outcomes.forEach(m => m.probability = 1 / outcomes.length);
-		return outcomes.length ? outcomes : null;
+		return {
+			probability: this.probability,
+			delay: this.delay,
+			postdelay: this.postdelay,
+		};
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (char && char.state == 'awake') {
-			return Promise.reject(`${char.name} ${char.surname} already awake`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (ctrl && ctrl.state == 'awake') {
+			return Promise.reject(`char already awake`);
 		}
-		return (char
-			? Promise.resolve(char)
-			: player.call('controlChar', { charId: outcome.charId })
-		)
-			.then(char => {
-				return char.call('wakeup')
-					.then(() => `woke up ${char.name} ${char.surname}`)
-			});
+
+		return (ctrl
+			? Promise.resolve(ctrl)
+			: bot.call('controlChar')
+		).then(ctrl => {
+			return ctrl.call('wakeup')
+				.then(() => `woke up ${ctrl.name} ${ctrl.surname}`)
+		});
 	}
 
 	dispose() {

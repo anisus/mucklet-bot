@@ -3,6 +3,7 @@ const config = {
 		hostUrl: "ws://localhost:8080",
 		webResourcePath: "http://localhost:8080/api/",
 		origin: "http://localhost:8080",
+		debug: true,
 	},
 	login: {
 		token: '', // Bot token created under Character Settings
@@ -30,7 +31,7 @@ const config = {
 		postdelay: 5000, // Wait 5 seconds after using an exit
 	},
 	actionIdle: {
-		probability: 20,         // Semi high probability to idle
+		probability: 0,          // No probability to idle
 		delayMin: 10 * 1000,     // Idle at least 10 seconds
 		delayMax: 5 * 60 * 1000, // Idle at most 5 minutes
 		spread: 'cube'           // Few high values
@@ -75,6 +76,7 @@ const config = {
 	},
 	actionWakeup: {
 		probability: 50,
+		delay: 1000,     // Wait 1 second before waking up
 	},
 	actionWhisper: {
 		populationProbability: { type: 'object', default: {

@@ -65,7 +65,7 @@ class ReactionPrivateReply {
 			msg = msg.slice(1);
 		}
 
-		this.module.actionWhisper.enqueue(char.id, ev.char.id, msg, pose, this.priority);
+		this.module.actionWhisper.enqueue(ev.char.id, msg, pose, this.priority);
 	}
 
 	dispose() {
