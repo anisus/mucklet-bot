@@ -5,7 +5,7 @@ const config = {
 		origin: "http://localhost:8080",
 		debug: true,
 	},
-	login: {
+	bot: {
 		token: '', // Bot token created under Character Settings
 	},
 	personality: {

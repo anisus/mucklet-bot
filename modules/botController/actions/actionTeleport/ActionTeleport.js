@@ -30,7 +30,7 @@ class ActionTeleport {
 			allowedDestinations: { type: '?array' },
 		});
 
-		this.app.require([ 'botController', 'api', 'login' ], this._init);
+		this.app.require([ 'botController', 'api', 'bot' ], this._init);
 	}
 
 	_init = (module) => {
@@ -44,7 +44,7 @@ class ActionTeleport {
 
 		// Fetch global teleport nodes as soon as logged in
 		this.globalTeleports = null;
-		this.module.login.getUserPromise()
+		this.module.bot.getBotPromise()
 			.then(() => this.module.api.get('core.nodes'))
 			.then(globalTeleports => {
 				// Assert module is not disposed
@@ -63,7 +63,7 @@ class ActionTeleport {
 		// Assert we have any controlled characters in rooms with exits.
 		if (!ctrl || (
 			!this.globalTeleports?.length && // No global teleport nodes
-			!ctrl.nodes.toArray().filter(n => n.room.id != m.inRoom.id).length // No character teleport nodes
+			!ctrl.nodes.toArray().filter(n => n.room.id != ctrl.inRoom.id).length // No character teleport nodes
 		)) return;
 
 		return {

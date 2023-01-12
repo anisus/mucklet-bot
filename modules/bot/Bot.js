@@ -1,15 +1,19 @@
 import { Model } from 'modapp-resource';
-import findById from '#utils/findById.js';
+import setParams from '#utils/setParams.js';
 
 /**
- * bot fetches the bot object and keeps it suscribed once logged in.
+ * Bot logs in to the API and fetches the bot model.
  */
-class bot {
+class Bot {
 	constructor(app, params) {
 		this.app = app;
 
+		// Params
+		setParams(this, params, {
+			token: { type: 'string' },
+		});
+
 		this.app.require([
-			'login',
 			'api',
 		], this._init);
 	}
@@ -17,9 +21,21 @@ class bot {
 	_init = (module) => {
 		this.module = Object.assign({ self: this }, module);
 
-		this.model = new Model({ data: { bot: null }, eventBus: this.app.eventBus });
-		// Try to fetch bot model as soon as logged in.
-		this.getBotPromise();
+		this.model = new Model({ data: { loggedIn: false, loginError: null, bot: null }, eventBus: this.app.eventBus });
+
+		// Set the authentication callback called everytime we connect to the API.
+		this.module.api.setOnConnect(this._authenticate);
+	}
+
+	/**
+	 * Connects to the API and returns a promise that resolves with the logged
+	 * in bot.
+	 * @returns {Promise.<Model>} Promise of the bot model.
+	 */
+	login() {
+		let promise = this.getBotPromise();
+		this._tryGetBot();
+		return promise;
 	}
 
 	/**
@@ -31,12 +47,17 @@ class bot {
 	}
 
 	/**
-	 * Returns a promise that resolves with the bot model, containing all
-	 * characters and their info, of the logged in user.
+	 * Returns a promise that resolves with the logged in bot.
 	 * @returns {Promise.<Model>} Promise of the bot model.
 	 */
 	getBotPromise() {
-		return this.botPromise = this.botPromise || this._tryGetbot();
+		return this.botPromise = this.botPromise || (
+			this.model.bot
+				? Promise.resolve(this.model.bot)
+				: new Promise((resolve, reject) => {
+					this.botPromiseCallbacks = { resolve, reject };
+				})
+		);
 	}
 
 	/**
@@ -57,18 +78,54 @@ class bot {
 		return this.model.bot?.controlled || null;
 	}
 
-	_tryGetbot() {
-		return this.module.login.getUserPromise()
-			.then(user => this.module.api.call('core', 'getBot'))
-			.then(bot => {
-				bot.on('unsubscribe', this._onUnsubscribe);
-				this.model.set({ bot });
-				return bot;
+	_tryGetBot() {
+		return this.module.api.connect()
+			.then(() => {
+				if (this.model.loggedIn) {
+					return this.model.bot
+						? Promise.resolve(this.model.bot)
+						: this.module.api.call('core', 'getBot')
+							.then(bot => {
+								this.model.set({ bot });
+								// If the bot model is forcefully unsubscribed,
+								// the bot token is most likely revoked.
+								bot.on('unsubscribe', this._onUnsubscribe);
+								return bot;
+							});
+				}
+				return Promise.reject(this.model.loginError || "Failed to login");
 			})
-			.catch(err => {
-				this.botPromise = null;
-				throw err;
-			});
+			.then(bot => this._resolve(bot))
+			.catch(err => this._reject(err));
+	}
+
+	_authenticate = () => {
+		return this.module.api.authenticate('auth', 'authenticateBot', {
+			token: this.token,
+		}).then(() => {
+			this.model.set({ loggedIn: true, loginError: null });
+		}).catch(err => {
+			// If we had a bot, this is a failed reconnect
+			if (this.model.bot) {
+				this._reject(err);
+			}
+			this.model.set({ loggedIn : false, bot: null, loginError: err });
+		});
+	}
+
+	_resolve(bot) {
+		if (this.botPromiseCallbacks) {
+			this.botPromiseCallbacks.resolve(bot);
+			this.botPromiseCallbacks = null;
+		}
+	}
+
+	_reject(err) {
+		if (this.botPromiseCallbacks) {
+			this.botPromiseCallbacks.reject(err);
+			this.botPromiseCallbacks = null;
+		}
+		this.botPromise = null;
 	}
 
 	_onUnsubscribe = () => {
@@ -76,14 +133,16 @@ class bot {
 		if (this.model.bot) {
 			this.model.bot.off('unsubscribe', this._onUnsubscribe);
 		}
-		this.model.set({ bot: null });
+		this.model.set({
+			loggedIn: false,
+			bot: null
+		});
 		this.botPromise = null;
 	}
 
 	dispose() {
 		this._onUnsubscribe();
 	}
-
 }
 
-export default bot;
+export default Bot;

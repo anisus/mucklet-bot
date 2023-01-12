@@ -4,7 +4,7 @@ const config = {
 		webResourcePath: "https://api.test.mucklet.com/api/",
 		origin: "https://test.mucklet.com",
 	},
-	login: {
+	bot: {
 		token: '', // Bot token created under Character Settings
 	},
 	personality: {
