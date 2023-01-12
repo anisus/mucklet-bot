@@ -34,7 +34,7 @@ try {
 
 function botUnsubscribed(ev, bot) {
 	console.log("Bot no longer logged in.");
-	bot?.off(botUnsubscribed);
+	bot.off('unsubscribe', botUnsubscribed);
 	process.exit(0);
 }
 
