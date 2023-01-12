@@ -12,12 +12,6 @@ const config = {
 		typeSpeed: 300,  // 300 characters per minute
 		readSpeed: 1500, // 1500 characters per minute
 	},
-	actionCreateChar: {
-		charLimit: 1,        // Create only one character
-		probability: 100,    // High probability
-		delay: 20 * 1000,    // 20 seconds to create a character
-		postdelay: 5 * 1000, // 5 seconds wait after creating a character
-	},
 	actionGo: {
 		populationProbability: {
 			1: 100, // Probability 100 with 0 - 1 characters in the room
