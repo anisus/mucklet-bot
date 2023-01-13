@@ -35,109 +35,74 @@ class CharPing {
 			retry: { type: 'number', default: defaultRetry },
 		});
 
-		this.app.require([ 'player', 'api' ], this._init);
+		this.app.require([ 'bot', 'api' ], this._init);
 	}
 
 	_init = (module) => {
 		this.module = Object.assign({ self: this }, module);
 
 		this.controlled = null;
-		this.timers = {};
-		this.playerModel = this.module.player.getModel();
-		this.playerModel.on('change', this._onModelChange);
+		this.timer = null;
+		this.botModel = this.module.bot.getModel();
+		this.botModel.on('change', this._onModelChange);
 		this._onModelChange();
 	}
 
 	_onModelChange = () => {
-		let c = this.playerModel.player && this.playerModel.player.controlled;
+		let c = this.botModel.bot && this.botModel.bot.controlled;
 		if (c === this.controlled) return;
 
-		this._setEventListeners(false);
+		this._togglePing(false);
 		this.controlled = c;
-		this._setEventListeners(true);
+		this._togglePing(true);
 	}
 
-	_setEventListeners = (on) => {
+	_togglePing = (on) => {
 		let c = this.controlled;
 		if (!c) return;
 
 		if (on) {
-			c.on('add', this._onAdd);
-			c.on('remove', this._onRemove);
-			for (let char of c) {
-				this._addChar(char);
-			}
+			this._ping(c);
 		} else {
-			c.off('add', this._onAdd);
-			c.off('remove', this._onRemove);
-			for (let char of c) {
-				this._removeChar(char);
+			let t = this.timer;
+			if (t) {
+				clearTimeout(this.timer);
+				this.timer = null;
 			}
-			this.timers = {};
 		}
 	}
 
 	_ping(char, since) {
 		since = since || 0;
-		this.timers[char.id] = true;
+		this.timer = true;
 		console.debug("charPing: Pinging char " + char.id);
 		char.call('ping').then(() => {
-			if (!this.timers[char.id]) return;
+			if (!this.timer) return;
 			// On successful ping
 			let t = setTimeout(() => {
-				if (this.timers[char.id] === t) {
+				if (this.timer === t) {
 					this._ping(char);
 				}
 			}, this.duration);
-			this.timers[char.id] = t;
+			this.timer = t;
 		}).catch(err => {
-			if (!this.timers[char.id]) return;
+			if (!this.timer) return;
 			// On failed ping
 			let d = since < this.threshold ? this.retry : this.duration;
 			console.error("Error pinging " + char.id + ". Retrying in " + (d / 1000) + " seconds: ", err);
 			let t = setTimeout(() => {
-				if (this.timers[char.id] === t) {
+				if (this.timer === t) {
 					this._ping(char, since + d);
 				}
 			}, d);
-			this.timers[char.id] = t;
+			this.timer = t;
 		});
 	}
 
-	_addChar(char) {
-		if (this._validChar(char)) {
-			this._ping(char);
-		}
-	}
-
-	_removeChar(char) {
-		let t = this.timers[char.id];
-		if (t) {
-			clearTimeout(this.timers[char.id]);
-			delete this.timers[char.id];
-		}
-	}
-
-	_onAdd = (ev) => {
-		this._addChar(ev.item);
-	}
-
-	_onRemove = (ev) => {
-		this._removeChar(ev.item);
-	}
-
-	_validChar(char) {
-		// Try get the botController module if it exists
-		let botController = this.app.getModule('botController');
-		return botController
-			? botController.validChar(char.id)
-			: true;
-	}
-
 	dispose() {
-		this._setEventListeners(false);
+		this._togglePing(false);
 		this.controlled = null;
-		this.playerModel.off('change', this._onModelChange);
+		this.botModel.off('change', this._onModelChange);
 	}
 }
 

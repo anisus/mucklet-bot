@@ -41,13 +41,13 @@ class ActionLurk {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.probability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id));
-		// Lurking can only be done with no characters awake, else it is idling
-		if (chars.length) return;
+		let ctrl = bot.controlled;
+
+		// Lurking can only be done with character not controlled, else it is idling
+		if (ctrl) return;
 
 		return {
 			delay: this.delayMin + Math.floor(Math.random() * (this.delayMax - this.delayMin)),
@@ -55,7 +55,7 @@ class ActionLurk {
 		};
 	}
 
-	_exec = (player, state, outcome) => {}
+	_exec = (bot, state, outcome) => {}
 
 	dispose() {
 		this.module.botController.removeAction('lurk');

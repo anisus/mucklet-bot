@@ -30,7 +30,7 @@ class ActionTeleport {
 			allowedDestinations: { type: '?array' },
 		});
 
-		this.app.require([ 'botController', 'api', 'login' ], this._init);
+		this.app.require([ 'botController', 'api', 'bot' ], this._init);
 	}
 
 	_init = (module) => {
@@ -44,7 +44,7 @@ class ActionTeleport {
 
 		// Fetch global teleport nodes as soon as logged in
 		this.globalTeleports = null;
-		this.module.login.getUserPromise()
+		this.module.bot.getBotPromise()
 			.then(() => this.module.api.get('core.nodes'))
 			.then(globalTeleports => {
 				// Assert module is not disposed
@@ -55,44 +55,40 @@ class ActionTeleport {
 			});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.populationProbability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id)
-				&& (
-					(this.globalTeleports && this.globalTeleports.length) // We have global teleport nodes
-					|| m.nodes.toArray().filter(n => n.room.id != m.inRoom.id).length // Character has own nodes
-				)
-			);
+		let ctrl = bot.controlled;
 
 		// Assert we have any controlled characters in rooms with exits.
-		if (!chars.length) return;
+		if (!ctrl || (
+			!this.globalTeleports?.length && // No global teleport nodes
+			!ctrl.nodes.toArray().filter(n => n.room.id != ctrl.inRoom.id).length // No character teleport nodes
+		)) return;
 
-		return chars
-			.map(c => ({
-				charId: c.id,
-				probability: populationProbability(c.inRoom, this.populationProbability) / chars.length,
-				delay: this.delay,
-				postdelay: this.postdelay,
-			}));
+		return {
+			probability: populationProbability(ctrl.inRoom, this.populationProbability),
+			delay: this.delay,
+			postdelay: this.postdelay,
+		};
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (!char) {
-			return Promise.reject(`${outcome.charId} not controlled`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (!ctrl) {
+			return Promise.reject(`char not controlled`);
 		}
+
 		// Combine global and character specific teleport nodes.
 		// Exclude nodes leading to the current room.
-		let nodes = this.globalTeleports.toArray().concat(char.nodes.toArray()).filter(n => n.room.id != char.inRoom.id && (!this.allowedDestinations || this.allowedDestinations.indexOf(n.key) >= 0));
+		let nodes = this.globalTeleports.toArray().concat(ctrl.nodes.toArray()).filter(n => n.room.id != ctrl.inRoom.id && (!this.allowedDestinations || this.allowedDestinations.indexOf(n.key) >= 0));
 		if (!nodes.length) {
-			return Promise.reject(`char ${char.name} ${char.surname} has no valid teleport nodes`);
+			return Promise.reject(`char ${ctrl.name} ${ctrl.surname} has no valid teleport nodes`);
 		}
 
 		let node = nodes[Math.floor(Math.random() * nodes.length)];
-		return char.call('teleport', { nodeId: node.id })
-			.then(() => `${char.name} ${char.surname} used teleport ${node.key}`);
+		return ctrl.call('teleport', { nodeId: node.id })
+			.then(() => `${ctrl.name} ${ctrl.surname} used teleport ${node.key}`);
 	}
 
 	dispose() {

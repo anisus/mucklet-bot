@@ -63,7 +63,7 @@ class ReactionArriveWelcome {
 			? this.phrases[Math.floor(Math.random() * this.phrases.length)]
 			: generateText(this.wordLengthMin, this.wordLengthMax);
 
-		this.module.actionPose.enqueue(char.id, replaceTags(msg, ev.char), this.priority);
+		this.module.actionPose.enqueue(replaceTags(msg, ev.char), this.priority);
 	}
 
 	dispose() {

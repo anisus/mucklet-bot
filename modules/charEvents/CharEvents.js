@@ -1,5 +1,5 @@
 /**
- * CharEvents listens to outgoing log events for any controlled character.
+ * CharEvents listens to outgoing log events for the controlled character.
  *
  * The purpose is to simplify listening and reacting to events for other
  * modules.
@@ -14,7 +14,7 @@
 	constructor(app, params) {
 		this.app = app;
 
-		this.app.require([ 'player' ], this._init);
+		this.app.require([ 'bot' ], this._init);
 	}
 
 	_init = (module) => {
@@ -22,9 +22,8 @@
 
 		this.controlled = null;
 		this.subs = [];
-		this.chars = {};
-		this.playerModel = this.module.player.getModel();
-		this.playerModel.on('change', this._onModelChange);
+		this.botModel = this.module.bot.getModel();
+		this.botModel.on('change', this._onModelChange);
 		this._onModelChange();
 	}
 
@@ -52,7 +51,7 @@
 
 
 	_onModelChange = () => {
-		let c = this.playerModel.player && this.playerModel.player.controlled;
+		let c = this.botModel.bot && this.botModel.bot.controlled;
 		if (c === this.controlled) return;
 
 		this._setEventListeners(false);
@@ -64,42 +63,7 @@
 		let c = this.controlled;
 		if (!c) return;
 
-		if (on) {
-			c.on('add', this._onAdd);
-			c.on('remove', this._onRemove);
-			for (let char of c) {
-				this._addChar(char);
-			}
-		} else {
-			c.off('add', this._onAdd);
-			c.off('remove', this._onRemove);
-			for (let k in this.chars) {
-				this._removeChar(this.chars[k]);
-			}
-		}
-	}
-
-	_addChar(char) {
-		if (this._validChar(char)) {
-			this.chars[char.id] = char;
-			char.on('out', this._onOut);
-		}
-	}
-
-	_removeChar(char) {
-		let c = this.chars[char.id];
-		if (c) {
-			c.off('out', this._onOut);
-			delete this.chars[c.id];
-		}
-	}
-
-	_onAdd = (ev) => {
-		this._addChar(ev.item);
-	}
-
-	_onRemove = (ev) => {
-		this._removeChar(ev.item);
+		c[on ? 'on' : 'off']('out', this._onOut);
 	}
 
 	_onOut = (ev, char) => {
@@ -113,20 +77,11 @@
 		}
 	}
 
-	_validChar(char) {
-		// Try get the botController module if it exists
-		let botController = this.app.getModule('botController');
-		return botController
-			? botController.validChar(char.id)
-			: true;
-	}
-
 	dispose() {
 		this._setEventListeners(false);
 		this.controlled = null;
 		this.subs = null;
-		this.chars = null;
-		this.playerModel.off('change', this._onModelChange);
+		this.botModel.off('change', this._onModelChange);
 	}
 }
 
