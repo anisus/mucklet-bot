@@ -88,8 +88,6 @@ const config = {
 			80: 0.0125, // 5% chance with 80 characters
 		},
 		priority: 150,
-		delay: 5 * 1000,     // 5 seconds additional delay before welcoming
-		postdelay: 2 * 1000, // 2 seconds delay after welcoming
 		phrases: [
 			"waves to {name}.",
 			"says, \"Hi, {name}!\"",

@@ -20,10 +20,11 @@
 	_init = (module) => {
 		this.module = Object.assign({ self: this }, module);
 
-		this.controlled = null;
 		this.subs = [];
 		this.botModel = this.module.bot.getModel();
-		this.botModel.on('change', this._onModelChange);
+		this.bot = null;
+		this.controlled = null;
+		this._listenModel(true);
 		this._onModelChange();
 	}
 
@@ -49,21 +50,42 @@
 		return true;
 	}
 
-
-	_onModelChange = () => {
-		let c = this.botModel.bot && this.botModel.bot.controlled;
-		if (c === this.controlled) return;
-
-		this._setEventListeners(false);
-		this.controlled = c;
-		this._setEventListeners(true);
+	_listenModel= (on) => {
+		if (this.botModel) {
+			this.botModel[on ? 'on' : 'off']('change', this._onModelChange);
+		}
 	}
 
-	_setEventListeners = (on) => {
-		let c = this.controlled;
-		if (!c) return;
 
-		c[on ? 'on' : 'off']('out', this._onOut);
+	_onModelChange = () => {
+		let bot = this.botModel?.bot || null;
+		if (bot === this.bot) return;
+
+		this._listenBot(false);
+		this.bot = bot;
+		this._listenBot(true);
+		this._onBotChange();
+	}
+
+	_listenBot = (on) => {
+		if (this.bot) {
+			this.bot[on ? 'on' : 'off']('change', this._onBotChange);
+		}
+	}
+
+	_onBotChange = () => {
+		let controlled = this.bot?.controlled || null;
+		if (controlled === this.controlled) return;
+
+		this._listenControlled(false);
+		this.controlled = controlled;
+		this._listenControlled(true);
+	}
+
+	_listenControlled = (on) => {
+		if (this.controlled) {
+			this.controlled[on ? 'on' : 'off']('out', this._onOut);
+		}
 	}
 
 	_onOut = (ev, char) => {
@@ -78,10 +100,11 @@
 	}
 
 	dispose() {
-		this._setEventListeners(false);
+		this._listenControlled(false);
+		this._listenBot(false);
+		this._listenModel(false);
 		this.controlled = null;
-		this.subs = null;
-		this.botModel.off('change', this._onModelChange);
+		this.bot = null;
 	}
 }
 
