@@ -41,15 +41,32 @@ class CharPing {
 	_init = (module) => {
 		this.module = Object.assign({ self: this }, module);
 
+		this.bot = null;
 		this.controlled = null;
 		this.timer = null;
 		this.botModel = this.module.bot.getModel();
-		this.botModel.on('change', this._onModelChange);
-		this._onModelChange();
+		this.botModel.on('change', this._onBotModelChange);
+		this._onBotModelChange();
 	}
 
-	_onModelChange = () => {
-		let c = this.botModel.bot && this.botModel.bot.controlled;
+	_onBotModelChange = () => {
+		let bot = this.botModel.bot || null;
+		if (bot === this.bot) return;
+
+		this._listenBot(false);
+		this.bot = bot;
+		this._listenBot(true);
+		this._onBotChange();
+	}
+
+	_listenBot(on) {
+		if (this.bot) {
+			this.bot[on ? 'on' : 'off']('change', this._onBotChange);
+		}
+	}
+
+	_onBotChange = () => {
+		let c = this.botModel.bot?.controlled || null;
 		if (c === this.controlled) return;
 
 		this._togglePing(false);
@@ -101,8 +118,10 @@ class CharPing {
 
 	dispose() {
 		this._togglePing(false);
+		this._listenBot(false);
 		this.controlled = null;
-		this.botModel.off('change', this._onModelChange);
+		this.bot = null;
+		this.botModel.off('change', this._onBotModelChange);
 	}
 }
 
