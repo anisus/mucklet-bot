@@ -18,7 +18,7 @@ under _Character Settings_ in the client:
 git clone https://github.com/anisus/mucklet-bot.git
 cd mucklet-bot
 npm install
-node index.js --login.token=<BOT_TOKEN> cfg/config.mucklet.js
+node index.js --bot.token=<BOT_TOKEN> cfg/config.mucklet.js
 ```
 
 Login at [Mucklet.com](https://mucklet.com) to see the bot in action.
