@@ -41,29 +41,28 @@ class ActionSleep {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.probability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id));
-		// Assert we have any controlled characters to put to sleep.
-		if (!chars.length) return;
+		let ctrl = bot.controlled;
 
-		return chars.map(c => ({
-			charId: c.id,
-			probability: this.probability / chars.length,
+		// Assert we have a controlled character to put to sleep.
+		if (!ctrl || ctrl.state != 'awake') return;
+
+		return {
+			probability: this.probability,
 			delay: this.delay,
 			postdelay: this.postdelay,
-		}));
+		};
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (!char) {
-			return Promise.reject(`${outcome.charId} not controlled`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (!ctrl) {
+			return Promise.reject(`char not controlled`);
 		}
-		return char.call('release')
-			.then(() => `${char.name} ${char.surname} put to sleep`);
+		return ctrl.call('release')
+			.then(() => `${ctrl.name} ${ctrl.surname} put to sleep`);
 	}
 
 	dispose() {

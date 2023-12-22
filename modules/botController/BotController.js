@@ -8,8 +8,6 @@ const STATE_DONE = 'done;'
 /**
  * BotController parameters.
  * @typedef {Object} BotController~Params
- * @property {?Array.<string>} [includeChars] Char IDs of chars handled by the bot controller. Null means all characters are included.
- * @property {?Array.<string>} [excludeChars] Char IDs of chars not handled by the bot controller. Null means no character is excluded.
  * @property {Array} [queue] Initial queue of actions when starting controller. Mainly for debug purpose.
  */
 
@@ -25,7 +23,7 @@ const STATE_DONE = 'done;'
 /**
  * BotController is the central module for creating an autonomous, self acting
  * bot. Other modules may register actions that the bot controller may tell the
- * bot-characters to perform.
+ * bot-character to perform.
  */
 class BotController {
 
@@ -38,29 +36,27 @@ class BotController {
 		this.app = app;
 		// Params
 		setParams(this, params, {
-			includeChars: { type: '?array' },
-			excludeChars: { type: '?array' },
 			queue: { type: 'array' },
 		});
 
-		this.app.require([ 'player' ], this._init);
+		this.app.require([ 'bot' ], this._init);
 	}
 
 	_init = (module) => {
 		this.module = Object.assign({ self: this }, module);
 
-		this.model = new Model({ data: { player: null, state: null }, eventBus: this.app.eventBus });
+		this.model = new Model({ data: { bot: null, state: null }, eventBus: this.app.eventBus });
 		this.actions = new Collection({ idAttribute: m => m.id, eventBus: this.app.eventBus });
-		this.player = null;
+		this.bot = null;
 
-		// Try to fetch player model as soon as logged in.
-		this.module.player.getPlayerPromise().then(this._startController)
+		// Try to fetch bot model as soon as logged in.
+		this.module.bot.getBotPromise().then(this._startController)
 	}
 
 	/**
 	 * Outcomes callback This callback is displayed as a global member.
 	 * @callback BotController~outcomesCallback
-	 * @param {Model} player Player model.
+	 * @param {Model} bot Bot model.
 	 * @param {object} state State object.
 	 * @returns {(?BotController~ActionOutcome|Array.<BotController~ActionOutcome>)} Zero or more possible outcomes for the action.
 	 */
@@ -68,7 +64,7 @@ class BotController {
 	/**
 	 * Execute callback called to execute an action outcome.
 	 * @callback BotController~executeCallback
-	 * @param {Model} player Player model.
+	 * @param {Model} bot Bot model.
 	 * @param {object} state State object.
 	 * @param {BotController~ActionOutcome} outcome Outcome to execute.
 	 * @returns {(?string|Promise.<?string>)} Optional string to log, or promise of a string to log. If the promise rejects, it will be logged as an error.
@@ -110,29 +106,8 @@ class BotController {
 		this._enqueue(actionId, outcome);
 	}
 
-	/**
-	 * Validates in a char is under bot control
-	 * @param {string} charId ID of character.
-	 * @param {object} [opt] Optional parameters.
-	 * @param {Array.<string>} [opt.includeChars] Array of characters to include. If provided, it overrides the includesChars of botController.
-	 * @param {Array.<string>} [opt.excludeChars] Array of characters to exclude. If provided, it overrides the excludeChars of botController.
-	 */
-	validChar(charId, opt) {
-		opt = opt || {};
-		let includeChars = opt.includeChars || this.includeChars;
-		let excludeChars = opt.excludeChars || this.excludeChars;
-
-		if (includeChars && includeChars.indexOf(charId) == -1) {
-			return false;
-		}
-		if (excludeChars && excludeChars.indexOf(charId) != -1) {
-			return false;
-		}
-		return true;
-	}
-
-	_startController = (player) => {
-		this.model.set({ player });
+	_startController = (bot) => {
+		this.model.set({ bot });
 
 		this._runPendingAction();
 	}
@@ -144,7 +119,7 @@ class BotController {
 
 		for (let action of this.actions) {
 			let os = action.outcomes
-				? action.outcomes(this.model.player, this.model.state)
+				? action.outcomes(this.model.bot, this.model.state)
 				: null;
 			if (os) {
 				os = Array.isArray(os) ? os : [os];
@@ -283,7 +258,7 @@ class BotController {
 			let action = this.actions.get(o.actionId);
 			// Execute the action, and if it is successful, start the postdelay timer.
 			if (action) {
-				return Promise.resolve(action.exec ? action.exec(this.model.player, this.model.state, o.outcome) : null)
+				return Promise.resolve(action.exec ? action.exec(this.model.bot, this.model.state, o.outcome) : null)
 					.then(result => {
 						if (result) {
 							console.debug(o.actionId + ":", toString(result))

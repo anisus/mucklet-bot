@@ -1,24 +1,23 @@
 import setParams from '#utils/setParams.js';
-import findById from '#utils/findById.js';
 import { populationProbability } from '#utils/probability.js';
 
 /**
- * ActionTeleport parameters.
- * @typedef {Object} ActionTeleport~Params
+ * ActionTeleportRoom parameters.
+ * @typedef {Object} ActionTeleportRoom~Params
  * @property {object} [populationProbability] Probabilities of the action to occur based on room population.
  * @property {number} [delay] Delay in milliseconds to wait prior to executing the action.
  * @property {number} [postdelay] Delay in milliseconds to wait after executing the action.
  */
 
 /**
- * ActionTeleport adds the action to teleport.
+ * ActionTeleportRoom adds the action to teleport.
  */
-class ActionTeleport {
+class ActionTeleportRoom {
 
 	/**
-	 * Creates a new ActionTeleport instance.
+	 * Creates a new ActionTeleportRoom instance.
 	 * @param {App} app Modapp App object.
-	 * @param {ActionTeleport~Params} params Module parameters.
+	 * @param {ActionTeleportRoom~Params} params Module parameters.
 	 */
 	constructor(app, params) {
 		this.app = app;
@@ -37,7 +36,7 @@ class ActionTeleport {
 		this.module = Object.assign({ self: this }, module);
 
 		this.module.botController.addAction({
-			id: 'teleport',
+			id: 'teleportRoom',
 			outcomes: this._outcomes,
 			exec: this._exec,
 		});
@@ -56,15 +55,12 @@ class ActionTeleport {
 	}
 
 	_outcomes = (bot, state) => {
-		if (!this.populationProbability) return;
+		if (!this.populationProbability || !this.allowedDestinations) return;
 
 		let ctrl = bot.controlled;
 
 		// Assert we have any controlled characters in rooms with exits.
-		if (!ctrl || (
-			!this.globalTeleports?.length && // No global teleport nodes
-			!ctrl.nodes.toArray().filter(n => n.room.id != ctrl.inRoom.id).length // No character teleport nodes
-		)) return;
+		if (!ctrl || !this.allowedDestinations.filter(id => id != ctrl.inRoom.id).length) return;
 
 		return {
 			probability: populationProbability(ctrl.inRoom, this.populationProbability),
@@ -79,20 +75,19 @@ class ActionTeleport {
 			return Promise.reject(`char not controlled`);
 		}
 
-		// Combine global and character specific teleport nodes.
-		// Exclude nodes leading to the current room.
-		let nodes = this.globalTeleports.toArray().concat(ctrl.nodes.toArray()).filter(n => n.room.id != ctrl.inRoom.id && (!this.allowedDestinations || this.allowedDestinations.indexOf(n.key) >= 0));
-		if (!nodes.length) {
+		// Exclude current room.
+		let rooms = this.allowedDestinations.filter(id => id != ctrl.inRoom.id)
+		if (!rooms.length) {
 			return Promise.reject(`char ${ctrl.name} ${ctrl.surname} has no valid teleport nodes`);
 		}
 
-		let node = nodes[Math.floor(Math.random() * nodes.length)];
-		return ctrl.call('teleport', { nodeId: node.id })
-			.then(() => `${ctrl.name} ${ctrl.surname} used teleport ${node.key}`);
+		let roomId = rooms[Math.floor(Math.random() * rooms.length)];
+		return ctrl.call('teleport', { roomId })
+			.then(() => `${ctrl.name} ${ctrl.surname} used teleport to #${roomId}`);
 	}
 
 	dispose() {
-		this.module.botController.removeAction('teleport');
+		this.module.botController.removeAction('teleportRoom');
 		if (this.globalTeleports) {
 			this.globalTeleports.off();
 		}
@@ -101,4 +96,4 @@ class ActionTeleport {
 
 }
 
-export default ActionTeleport;
+export default ActionTeleportRoom;

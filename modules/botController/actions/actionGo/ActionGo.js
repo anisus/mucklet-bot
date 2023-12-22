@@ -42,36 +42,34 @@ class ActionGo {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.populationProbability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id) && m.inRoom.exits.length);
-		// Assert we have any controlled characters in rooms with exits.
-		if (!chars.length) return;
+		let ctrl = bot.controlled;
 
-		return chars
-			.map(c => ({
-				charId: c.id,
-				probability: populationProbability(c.inRoom, this.populationProbability) / chars.length,
-				delay: this.delay,
-				postdelay: this.postdelay,
-			}));
+		// Assert we have a controlled character in rooms with exits.
+		if (!ctrl || !ctrl.inRoom?.exits.length) return;
+
+		return {
+			probability: populationProbability(ctrl.inRoom, this.populationProbability),
+			delay: this.delay,
+			postdelay: this.postdelay,
+		};
 	}
 
-	_exec = (player, state, outcome) => {
-		let char = findById(player.controlled, outcome.charId);
-		if (!char) {
-			return Promise.reject(`${outcome.charId} not controlled`);
+	_exec = (bot, state, outcome) => {
+		let ctrl = bot.controlled;
+		if (!ctrl) {
+			return Promise.reject(`char not controlled`);
 		}
-		let exits = char.inRoom.exits;
+		let exits = ctrl.inRoom.exits;
 		if (!exits.length) {
-			return Promise.reject(`room ${char.inRoom.name} has no visible exits`);
+			return Promise.reject(`room ${ctrl.inRoom.name} has no visible exits`);
 		}
 
 		let exit = exits.atIndex(Math.floor(Math.random() * exits.length));
-		return char.call('useExit', { exitId: exit.id })
-			.then(() => `${char.name} ${char.surname} used exit ${exit.keys[0]}`);
+		return ctrl.call('useExit', { exitId: exit.id })
+			.then(() => `${ctrl.name} ${ctrl.surname} used exit ${exit.keys[0]}`);
 	}
 
 	dispose() {

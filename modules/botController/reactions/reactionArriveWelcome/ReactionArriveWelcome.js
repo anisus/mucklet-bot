@@ -8,8 +8,6 @@ import { populationProbability } from '#utils/probability.js';
  * @typedef {Object} ReactionArriveWelcome~Params
  * @property {object} [populationChance] Chances of welcoming arrivals, between 0 and 1, based on room population.
  * @property {number} [priority] Priority of the reply action.
- * @property {number} [delay] Additional delay in milliseconds to wait prior to executing the action.
- * @property {number} [postdelay] Delay in milliseconds to wait after executing the action.
  * @property {number} [wordLengthMin] Minimum number of words in a message. Ignored if phrases is set.
  * @property {number} [wordLengthMax] Maximum number of words in a message. Ignored if phrases is set.
  * @property {?Array.<string>} [phrases] An array of phrases to use as message. Null means random lorem ipsum.
@@ -31,8 +29,6 @@ class ReactionArriveWelcome {
 		setParams(this, params, {
 			populationChance: { type: '?object' },
 			priority: { type: 'number', default: 150 },
-			delay: { type: 'number' },
-			postdelay: { type: 'number' },
 			wordLengthMin: { type: 'number', default: 1 },
 			wordLengthMax: { type: 'number', default: 12 },
 			phrases: { type: '?array' },
@@ -63,7 +59,7 @@ class ReactionArriveWelcome {
 			? this.phrases[Math.floor(Math.random() * this.phrases.length)]
 			: generateText(this.wordLengthMin, this.wordLengthMax);
 
-		this.module.actionPose.enqueue(char.id, replaceTags(msg, ev.char), this.priority);
+		this.module.actionPose.enqueue(replaceTags(msg, ev.char), this.priority);
 	}
 
 	dispose() {

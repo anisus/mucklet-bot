@@ -11,15 +11,14 @@ modular bot for accessing a mucklet API.
 
 ## Quick start
 
-Run the following commands. Replace `<USERNAME>` with a name of your choice.
-The bot will automatically register the user, using the password `mysecret`, as
-defined in `config.mucklet.js`:
+Run the following commands. Replace `<BOT_TOKEN>` with a bot token generated
+under _Character Settings_ in the client:
 
  ```text
 git clone https://github.com/anisus/mucklet-bot.git
 cd mucklet-bot
 npm install
-node index.js --login.user=<USERNAME> cfg/config.mucklet.js
+node index.js --bot.token=<BOT_TOKEN> cfg/config.mucklet.js
 ```
 
 Login at [Mucklet.com](https://mucklet.com) to see the bot in action.

@@ -62,7 +62,7 @@ class ReactionTravelGreet {
 			? this.phrases[Math.floor(Math.random() * this.phrases.length)]
 			: generateText(this.wordLengthMin, this.wordLengthMax);
 
-		this.module.actionPose.enqueue(char.id, msg, this.priority);
+		this.module.actionPose.enqueue(msg, this.priority);
 	}
 
 	dispose() {

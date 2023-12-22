@@ -42,13 +42,12 @@ class ActionIdle {
 		});
 	}
 
-	_outcomes = (player, state) => {
+	_outcomes = (bot, state) => {
 		if (!this.probability) return;
 
-		let chars = player.controlled.toArray()
-			.filter(m => this.module.botController.validChar(m.id));
-		// Idling can only be done with characters awake, else it is lurking
-		if (!chars.length) return;
+		let ctrl = bot.controlled;
+		// Idling can only be done with character awake, else it is lurking
+		if (!ctrl || ctrl.state != 'awake' ) return;
 
 		return {
 			delay: this.delayMin + Math.floor(Math.random() * (this.delayMax - this.delayMin)),
@@ -56,7 +55,7 @@ class ActionIdle {
 		};
 	}
 
-	_exec = (player, state, outcome) => {}
+	_exec = (bot, state, outcome) => {}
 
 
 	dispose() {

@@ -33,7 +33,9 @@ class Personality {
 	 * @returns {number} Duration in milliseconds.
 	 */
 	calculateTypeDuration(msg) {
-		return 60 * 1000 * msg.length / this.typeSpeed;
+		return this.typeSpeed > 0
+			? 60 * 1000 * msg.length / this.typeSpeed
+			: 0;
 	}
 
 	/**
@@ -42,7 +44,9 @@ class Personality {
 	 * @returns {number} Duration in milliseconds.
 	 */
 	calculateReadDuration(msg) {
-		return 60 * 1000 * msg.length / this.readSpeed;
+		return this.readSpeed > 0
+			? 60 * 1000 * msg.length / this.readSpeed
+			: 0;
 	}
 
 	dispose() {}

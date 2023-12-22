@@ -19,11 +19,16 @@ class Api {
 			hostUrl: { type: 'string', default: '/ws' },
 			webResourcePath: { type: 'string', default: '/api/' },
 			origin: { type: 'string', default: 'http://localhost' },
+			debug: { type: 'bool', default: false },
 		});
 
 		this._client = new ResClient(() => new WebSocket(this.hostUrl, {
-			origin: this.origin
-		}), { namespace, eventBus: app.eventBus });
+			origin: this.origin,
+		}), {
+			namespace,
+			eventBus: app.eventBus,
+			debug: this.debug
+		});
 
 	}
 
